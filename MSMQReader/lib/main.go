@@ -2,6 +2,7 @@ package lib
 
 import (
 	"fmt"
+	"strings"
 
 	ole "github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
@@ -13,7 +14,7 @@ type QueueMsg struct {
 }
 
 // ReadQueue method returns a list of messages from MSMQ
-func ReadQueue(server string, queuetype string, queuename string) []QueueMsg {
+func ReadQueue(server string, queuetype string, queuename string, search string) []QueueMsg {
 
 	var list []QueueMsg
 	ole.CoInitialize(0)
@@ -41,7 +42,10 @@ func ReadQueue(server string, queuetype string, queuename string) []QueueMsg {
 		if msg != nil {
 			msgBody := oleutil.MustGetProperty(msg, "Body").Value().(string)
 			// fmt.Println(msgBody)
-			list = append(list, QueueMsg{Body: msgBody})
+			subStr := search
+			if strings.Contains(msgBody, subStr) {
+				list = append(list, QueueMsg{Body: msgBody})
+			}
 			oleutil.MustCallMethod(MSMQqueue, "PeekNext", 0, true, 1000, 0).ToIDispatch()
 		} else {
 			oleutil.MustCallMethod(MSMQqueue, "Close")
